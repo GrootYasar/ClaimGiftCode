@@ -28,8 +28,13 @@ app = Flask(__name__)
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    update = telebot.types.Update.de_json(request.stream.read().decode("utf-8"))
-    bot.process_new_updates([update])
+    logger.debug("Webhook received")
+    try:
+        update = telebot.types.Update.de_json(request.stream.read().decode("utf-8"))
+        logger.debug(f"Update received: {update}")
+        bot.process_new_updates([update])
+    except Exception as e:
+        logger.error(f"Error processing update: {e}")
     return jsonify({'ok': True}), 200
 
 @bot.message_handler(commands=['start'])
@@ -144,7 +149,7 @@ def handle_message(message):
     user_id = message.from_user.id
     user_text = message.text
     logger.debug(f"Received message from user {user_id}: {user_text}")
-    add_user(user_id)  # Store user ID
+    add_user(user_id)
 
     if is_member(user_id):
         if is_valid_giftcode(user_text):

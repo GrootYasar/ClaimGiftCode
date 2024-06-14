@@ -27,6 +27,7 @@ if not os.path.exists('bulk_cookies'):
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     user_id = message.from_user.id
+    logger.debug(f"Received /start command from user {user_id}")
     add_user(user_id)
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.add(types.KeyboardButton('Generate Gift Code'))
@@ -37,6 +38,7 @@ def send_welcome(message):
 @bot.message_handler(func=lambda message: message.text == 'Generate Gift Code')
 def handle_generate_gift_code(message):
     user_id = message.from_user.id
+    logger.debug(f"Received 'Generate Gift Code' from user {user_id}")
     if can_generate_giftcode(user_id):
         gift_code = generate_gift_code()
         cookie_data = f"Cookie data for {gift_code}"  # Replace with actual cookie data generation
@@ -46,6 +48,7 @@ def handle_generate_gift_code(message):
             if shortened_url:
                 add_giftcode(user_id, gift_code)
                 bot.send_message(message.chat.id, f"Here is your gift code URL: {shortened_url}")
+                logger.debug(f"Sent gift code URL to user {user_id}")
             else:
                 bot.send_message(message.chat.id, "Failed to shorten URL. Please try again.")
                 logger.error("Failed to shorten URL")
@@ -54,27 +57,33 @@ def handle_generate_gift_code(message):
             logger.error("Failed to create Pastebin entry")
     else:
         bot.send_message(message.chat.id, "You can only generate a gift code every 6 hours. Please try again later.")
+        logger.debug(f"User {user_id} attempted to generate a gift code too soon")
 
 @bot.message_handler(func=lambda message: message.text == 'Claim Cookies')
 def handle_claim_cookies(message):
+    logger.debug(f"Received 'Claim Cookies' from user {message.from_user.id}")
     bot.send_message(message.chat.id, "Please enter your gift code.")
 
 @bot.message_handler(func=lambda message: message.text == 'Support')
 def handle_support(message):
+    logger.debug(f"Received 'Support' from user {message.from_user.id}")
     bot.send_message(message.chat.id, "Support: @SinwarX, Please share screenshot of cookies not working within 15minutes after received")
 
 @bot.message_handler(commands=['upload_cookies'])
 def handle_bulk_upload_command(message):
     if str(message.from_user.id) == str(BOT_OWNER_ID):
+        logger.debug(f"Received /upload_cookies from bot owner {message.from_user.id}")
         bot.send_message(message.chat.id, "Please send the bulk cookies file.")
         bot_owner_uploading[message.from_user.id] = 'upload_cookies'
     else:
+        logger.debug(f"Unauthorized user {message.from_user.id} attempted to use /upload_cookies")
         bot.send_message(message.chat.id, "You are not authorized to use this command.")
 
 @bot.message_handler(content_types=['document'])
 def handle_bulk_upload(message):
     if bot_owner_uploading.get(message.from_user.id) == 'upload_cookies':
         try:
+            logger.debug(f"Processing bulk upload from bot owner {message.from_user.id}")
             file_info = bot.get_file(message.document.file_id)
             downloaded_file = bot.download_file(file_info.file_path)
             extension = os.path.splitext(message.document.file_name)[1]
@@ -94,13 +103,16 @@ def handle_bulk_upload(message):
 
 def process_bulk_cookies(file_path, file_name):
     add_bulk_cookies([(file_name, file_path)])
+    logger.debug(f"Processed bulk cookies from file {file_path}")
 
 @bot.message_handler(commands=['broadcast'])
 def handle_broadcast_command(message):
     if str(message.from_user.id) == str(BOT_OWNER_ID):
+        logger.debug(f"Received /broadcast from bot owner {message.from_user.id}")
         bot.send_message(message.chat.id, "Please send the message you want to broadcast.")
         bot_owner_uploading[message.from_user.id] = 'broadcast'
     else:
+        logger.debug(f"Unauthorized user {message.from_user.id} attempted to use /broadcast")
         bot.send_message(message.chat.id, "You are not authorized to use this command.")
 
 @bot.message_handler(func=lambda message: message.from_user.id in bot_owner_uploading and bot_owner_uploading[message.from_user.id] == 'broadcast')
@@ -108,6 +120,7 @@ def handle_broadcast_message(message):
     if str(message.from_user.id) == str(BOT_OWNER_ID):
         broadcast_message = message.text
         users = get_all_users()
+        logger.debug(f"Broadcasting message to all users from bot owner {message.from_user.id}")
         for user_id in users:
             try:
                 bot.send_message(user_id, broadcast_message)
@@ -122,6 +135,7 @@ def handle_broadcast_message(message):
 def handle_message(message):
     user_id = message.from_user.id
     user_text = message.text
+    logger.debug(f"Received message from user {user_id}: {user_text}")
     add_user(user_id)  # Store user ID
 
     if is_member(user_id):
@@ -133,20 +147,27 @@ def handle_message(message):
                         with open(cookie_file, 'rb') as doc:
                             bot.send_document(message.chat.id, doc)
                         redeem_giftcode(user_id, user_text)
+                        logger.debug(f"User {user_id} successfully claimed a cookie")
                     except FileNotFoundError:
                         bot.send_message(message.chat.id, "Error: The cookie file was not found. Please try again later.")
+                        logger.error(f"Cookie file not found for user {user_id}")
                 else:
                     bot.send_message(message.chat.id, "No cookies available. Please try again later.")
+                    logger.debug(f"No cookies available for user {user_id}")
             else:
                 bot.send_message(message.chat.id, "You can only claim one cookie every 3 hours. Please try again later.")
+                logger.debug(f"User {user_id} attempted to claim a cookie too soon")
         else:
             bot.send_message(message.chat.id, "Invalid or already redeemed gift code. Please try again.")
+            logger.debug(f"User {user_id} provided an invalid or already redeemed gift code")
     else:
         bot.send_message(message.chat.id, "You must join our channel @dailynetflixcookiesfree to use this bot. Please join and try again.")
+        logger.debug(f"User {user_id} is not a member of the channel")
 
 def is_member(user_id):
     try:
         member_status = bot.get_chat_member(chat_id=CHANNEL_ID, user_id=user_id).status
+        logger.debug(f"Checked membership status for user {user_id}: {member_status}")
         return member_status in ["member", "administrator", "creator"]
     except telebot.apihelper.ApiTelegramException as e:
         logger.error(f"Failed to check membership for user {user_id}: {e}")

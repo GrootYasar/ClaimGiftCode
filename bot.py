@@ -10,7 +10,7 @@ from utils import generate_gift_code, create_pastebin_entry, shorten_url
 from flask import Flask
 from multiprocessing import Process
 
-logging.basicConfig(level=logging.DEBUG)  # Set the logging level to DEBUG
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)

@@ -41,13 +41,25 @@ def webhook():
 def send_welcome(message):
     user_id = message.from_user.id
     logger.debug(f"Received /start command from user {user_id}")
-    add_user(user_id)
+    try:
+        add_user(user_id)
+    except Exception as e:
+        logger.error(f"Error adding user {user_id} to the database: {e}")
+        bot.send_message(message.chat.id, "An error occurred while processing your request. Please try again later.")
+        return
+
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.add(types.KeyboardButton('Generate Gift Code'))
     keyboard.add(types.KeyboardButton('Claim Cookies'))
     keyboard.add(types.KeyboardButton('Support'))
-    bot.send_message(message.chat.id, "Welcome! Please choose an option:", reply_markup=keyboard)
-    logger.debug(f"Sent welcome message to user {user_id}")
+
+    try:
+        bot.send_message(message.chat.id, "Welcome! Please choose an option:", reply_markup=keyboard)
+        logger.debug(f"Sent welcome message to user {user_id}")
+    except Exception as e:
+        logger.error(f"Error sending welcome message to user {user_id}: {e}")
+
+# ... (rest of the code remains the same) ...
 
 @bot.message_handler(func=lambda message: message.text == 'Generate Gift Code')
 def handle_generate_gift_code(message):

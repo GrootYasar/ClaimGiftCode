@@ -8,7 +8,7 @@ from config import TELEGRAM_TOKEN, CHANNEL_ID, BOT_OWNER_ID, PASTEBIN_API_KEY, U
 from db import init_db, can_claim_cookie, can_generate_giftcode, is_valid_giftcode, get_random_cookie_file, redeem_giftcode, add_bulk_cookies, add_giftcode, add_user, get_all_users
 from utils import generate_gift_code, create_pastebin_entry, shorten_url
 from flask import Flask
-import threading
+from multiprocessing import Process
 
 logging.basicConfig(level=logging.DEBUG)  # Set the logging level to DEBUG
 logger = logging.getLogger(__name__)
@@ -165,6 +165,10 @@ def run_telegram():
 
 if __name__ == '__main__':
     init_db()
-    # Start Flask and Telegram polling in separate threads
-    threading.Thread(target=run_flask).start()
-    threading.Thread(target=run_telegram).start()
+    # Start Flask and Telegram polling in separate processes
+    p1 = Process(target=run_flask)
+    p2 = Process(target=run_telegram)
+    p1.start()
+    p2.start()
+    p1.join()
+    p2.join()

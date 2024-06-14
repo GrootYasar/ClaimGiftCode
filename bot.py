@@ -12,7 +12,7 @@ from flask import Flask, request, jsonify
 from multiprocessing import Process
 from requests.exceptions import ConnectionError
 
-logging.basicConfig(level=logging.DEBUG)  # Set the logging level to DEBUG
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
@@ -23,7 +23,7 @@ if not os.path.exists('cookies'):
     os.makedirs('cookies')
 if not os.path.exists('bulk_cookies'):
     os.makedirs('bulk_cookies')
-    # Flask app setup
+
 app = Flask(__name__)
 
 @app.route('/webhook', methods=['POST'])
@@ -31,7 +31,7 @@ def webhook():
     update = telebot.types.Update.de_json(request.stream.read().decode("utf-8"))
     bot.process_new_updates([update])
     return jsonify({'ok': True}), 200
-    
+
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     user_id = message.from_user.id
@@ -41,8 +41,7 @@ def send_welcome(message):
     keyboard.add(types.KeyboardButton('Generate Gift Code'))
     keyboard.add(types.KeyboardButton('Claim Cookies'))
     keyboard.add(types.KeyboardButton('Support'))
-    bot.send_message(message.chat.id, "Welcome Please choose an option:", reply_markup=keyboard)
-
+    bot.send_message(message.chat.id, "Welcome! Please choose an option:", reply_markup=keyboard)
 
 @bot.message_handler(func=lambda message: message.text == 'Generate Gift Code')
 def handle_generate_gift_code(message):
@@ -182,8 +181,6 @@ def is_member(user_id):
         logger.error(f"Failed to check membership for user {user_id}: {e}")
         return False
 
-app = Flask(__name__)
-
 @app.route('/health', methods=['GET'])
 def health_check():
     return 'OK'
@@ -196,21 +193,14 @@ def run_telegram():
     for i in range(retry_count):
         try:
             logger.debug("Removing webhook")
-            bot.remove_webhook()  # Remove webhook if set
+            bot.remove_webhook()
             break
         except ConnectionError as e:
             logger.error(f"Connection error while removing webhook: {e}")
             if i < retry_count - 1:
-                time.sleep(2 ** i)  # Exponential backoff
+                time.sleep(2 ** i)
             else:
                 raise
-    bot.polling(none_stop=True)
-    
-def run_flask():
-    app.run(host='0.0.0.0', port=8000)
-
-def run_telegram():
-    bot.remove_webhook()
     bot.set_webhook(url='https://claimgiftcode.onrender.com/webhook')
 
 if __name__ == '__main__':

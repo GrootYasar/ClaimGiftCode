@@ -1,3 +1,6 @@
+import sqlite3
+
+
 def init_db():
     try:
         conn = sqlite3.connect('cookies.db')

@@ -205,7 +205,8 @@ def run_telegram():
             else:
                 raise
     bot.polling(none_stop=True)
-    def run_flask():
+    
+def run_flask():
     app.run(host='0.0.0.0', port=8000)
 
 def run_telegram():

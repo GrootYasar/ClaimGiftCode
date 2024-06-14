@@ -1,45 +1,42 @@
-import os
-import random
-import sqlite3
-from datetime import datetime, timedelta
-
 def init_db():
-    conn = sqlite3.connect('cookies.db')
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS cookies (
-            id INTEGER PRIMARY KEY,
-            giftcode TEXT UNIQUE,
-            cookie_file TEXT
-        )
-    ''')
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS redeemed (
-            user_id INTEGER,
-            giftcode TEXT,
-            claim_time TIMESTAMP,
-            UNIQUE(user_id, giftcode)
-        )
-    ''')
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS giftcodes (
-            user_id INTEGER,
-            giftcode TEXT UNIQUE,
-            generate_time TIMESTAMP
-        )
-    ''')
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            user_id INTEGER PRIMARY KEY
-        )
-    ''')
-    conn.commit()
-    return True
-except Exception as e:
-    print(f"Database initialization failed: {e}")
-    return False
-finally:
-    conn.close()
+    try:
+        conn = sqlite3.connect('cookies.db')
+        c = conn.cursor()
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS cookies (
+                id INTEGER PRIMARY KEY,
+                giftcode TEXT UNIQUE,
+                cookie_file TEXT
+            )
+        ''')
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS redeemed (
+                user_id INTEGER,
+                giftcode TEXT,
+                claim_time TIMESTAMP,
+                UNIQUE(user_id, giftcode)
+            )
+        ''')
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS giftcodes (
+                user_id INTEGER,
+                giftcode TEXT UNIQUE,
+                generate_time TIMESTAMP
+            )
+        ''')
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                user_id INTEGER PRIMARY KEY
+            )
+        ''')
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Database initialization failed: {e}")
+        return False
+    finally:
+        conn.close()
+
 
 def can_claim_cookie(user_id):
     conn = sqlite3.connect('cookies.db')

@@ -3,14 +3,16 @@ import logging
 import telebot
 import random
 import string
+import time
 from telebot import types
 from config import TELEGRAM_TOKEN, CHANNEL_ID, BOT_OWNER_ID, PASTEBIN_API_KEY, URL_SHORTENER_API_KEY
 from db import init_db, can_claim_cookie, can_generate_giftcode, is_valid_giftcode, get_random_cookie_file, redeem_giftcode, add_bulk_cookies, add_giftcode, add_user, get_all_users
 from utils import generate_gift_code, create_pastebin_entry, shorten_url
 from flask import Flask
 from multiprocessing import Process
+from requests.exceptions import ConnectionError
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)  # Set the logging level to DEBUG
 logger = logging.getLogger(__name__)
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
@@ -160,7 +162,17 @@ def run_flask():
     app.run(host='0.0.0.0', port=8000)
 
 def run_telegram():
-    bot.remove_webhook()  # Remove webhook if set
+    retry_count = 5
+    for i in range(retry_count):
+        try:
+            bot.remove_webhook()  # Remove webhook if set
+            break
+        except ConnectionError as e:
+            logger.error(f"Connection error while removing webhook: {e}")
+            if i < retry_count - 1:
+                time.sleep(2 ** i)  # Exponential backoff
+            else:
+                raise
     bot.polling(none_stop=True)
 
 if __name__ == '__main__':

@@ -8,7 +8,7 @@ from telebot import types
 from config import TELEGRAM_TOKEN, CHANNEL_ID, BOT_OWNER_ID, PASTEBIN_API_KEY, URL_SHORTENER_API_KEY
 from db import init_db, can_claim_cookie, can_generate_giftcode, is_valid_giftcode, get_random_cookie_file, redeem_giftcode, add_bulk_cookies, add_giftcode, add_user, get_all_users
 from utils import generate_gift_code, create_pastebin_entry, shorten_url
-from flask import Flask
+from flask import Flask, request, jsonify
 from multiprocessing import Process
 from requests.exceptions import ConnectionError
 
@@ -23,7 +23,15 @@ if not os.path.exists('cookies'):
     os.makedirs('cookies')
 if not os.path.exists('bulk_cookies'):
     os.makedirs('bulk_cookies')
+    # Flask app setup
+app = Flask(__name__)
 
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    update = telebot.types.Update.de_json(request.stream.read().decode("utf-8"))
+    bot.process_new_updates([update])
+    return jsonify({'ok': True}), 200
+    
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     user_id = message.from_user.id
@@ -197,10 +205,16 @@ def run_telegram():
             else:
                 raise
     bot.polling(none_stop=True)
+    def run_flask():
+    app.run(host='0.0.0.0', port=8000)
+
+def run_telegram():
+    bot.remove_webhook()
+    bot.set_webhook(url='https://claimgiftcode.onrender.com/webhook')
 
 if __name__ == '__main__':
     init_db()
-    # Start Flask and Telegram polling in separate processes
+    # Start Flask and Telegram webhook in separate processes
     p1 = Process(target=run_flask)
     p2 = Process(target=run_telegram)
     p1.start()

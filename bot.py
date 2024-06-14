@@ -47,6 +47,7 @@ def send_welcome(message):
     keyboard.add(types.KeyboardButton('Claim Cookies'))
     keyboard.add(types.KeyboardButton('Support'))
     bot.send_message(message.chat.id, "Welcome! Please choose an option:", reply_markup=keyboard)
+    logger.debug(f"Sent welcome message to user {user_id}")
 
 @bot.message_handler(func=lambda message: message.text == 'Generate Gift Code')
 def handle_generate_gift_code(message):
@@ -80,7 +81,7 @@ def handle_claim_cookies(message):
 @bot.message_handler(func=lambda message: message.text == 'Support')
 def handle_support(message):
     logger.debug(f"Received 'Support' from user {message.from_user.id}")
-    bot.send_message(message.chat.id, "Support: @SinwarX, Please share screenshot of cookies not working within 15minutes after received")
+    bot.send_message(message.chat.id, "Support: @SinwarX, Please share screenshot of cookies not working within 15 minutes after received")
 
 @bot.message_handler(commands=['upload_cookies'])
 def handle_bulk_upload_command(message):

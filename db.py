@@ -34,6 +34,11 @@ def init_db():
         )
     ''')
     conn.commit()
+    return True
+except Exception as e:
+    print(f"Database initialization failed: {e}")
+    return False
+finally:
     conn.close()
 
 def can_claim_cookie(user_id):

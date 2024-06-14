@@ -8,7 +8,7 @@ from config import TELEGRAM_TOKEN, CHANNEL_ID, BOT_OWNER_ID, PASTEBIN_API_KEY, U
 from db import init_db, can_claim_cookie, can_generate_giftcode, is_valid_giftcode, get_random_cookie_file, redeem_giftcode, add_bulk_cookies, add_giftcode, add_user, get_all_users
 from utils import generate_gift_code, create_pastebin_entry, shorten_url
 from flask import Flask
-
+import threading
 
 logging.basicConfig(level=logging.DEBUG)  # Set the logging level to DEBUG
 logger = logging.getLogger(__name__)
@@ -156,11 +156,15 @@ app = Flask(__name__)
 def health_check():
     return 'OK'
 
-if __name__ == '__main__':
-    init_db()
-    bot.remove_webhook()  # Remove webhook if set
-
-    # Start the Flask app on port 8000
+def run_flask():
     app.run(host='0.0.0.0', port=8000)
 
+def run_telegram():
+    bot.remove_webhook()  # Remove webhook if set
     bot.polling(none_stop=True)
+
+if __name__ == '__main__':
+    init_db()
+    # Start Flask and Telegram polling in separate threads
+    threading.Thread(target=run_flask).start()
+    threading.Thread(target=run_telegram).start()

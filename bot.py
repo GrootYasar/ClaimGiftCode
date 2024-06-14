@@ -33,7 +33,8 @@ def send_welcome(message):
     keyboard.add(types.KeyboardButton('Generate Gift Code'))
     keyboard.add(types.KeyboardButton('Claim Cookies'))
     keyboard.add(types.KeyboardButton('Support'))
-    bot.send_message(message.chat.id, "Welcome! Please choose an option:", reply_markup=keyboard)
+    bot.send_message(message.chat.id, "Welcome Please choose an option:", reply_markup=keyboard)
+
 
 @bot.message_handler(func=lambda message: message.text == 'Generate Gift Code')
 def handle_generate_gift_code(message):

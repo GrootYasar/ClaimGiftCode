@@ -186,6 +186,7 @@ def run_telegram():
     retry_count = 5
     for i in range(retry_count):
         try:
+            logger.debug("Removing webhook")
             bot.remove_webhook()  # Remove webhook if set
             break
         except ConnectionError as e:
